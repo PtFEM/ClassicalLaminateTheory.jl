@@ -1,5 +1,5 @@
 # Top level test script for Stan.jl
-using BucklingOfPipes
+using ClassicalLaminateTheory
 using Base.Test
 
 println("Running tests for ClassicalLaminateTheory-j0.3/4-v0.0.1:")
