@@ -1,5 +1,19 @@
-using ClassicalLaminateTheory
+# Top level test script for Stan.jl
+using BucklingOfPipes
 using Base.Test
 
-# write your own tests here
-@test 1 == 1
+println("Running tests for BucklingOfPipes-j0.3/4-v0.0.1:")
+
+tests = [
+  "test_clt.jl",
+  "test_basisfunctions.jl"
+]
+
+println("Running tests:")
+
+for my_test in tests
+    println("\n  * $(my_test) *")
+    include(my_test)
+end
+
+println()
