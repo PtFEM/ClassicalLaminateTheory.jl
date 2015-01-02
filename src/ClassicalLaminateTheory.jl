@@ -21,7 +21,7 @@ export
   qbarmat,
   createLaminate!,
   
-  # From BucklingOfPipes.jl
+  # From ClassicalLaminateTheory.jl
   JULIA_SVG_BROWSER
 
 end # module

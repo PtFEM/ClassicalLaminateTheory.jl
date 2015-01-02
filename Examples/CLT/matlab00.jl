@@ -1,4 +1,4 @@
-using Compat, BucklingOfPipes
+using Compat, ClassicalLaminateTheory
 
 forcesAndMoments =
  @compat Dict(

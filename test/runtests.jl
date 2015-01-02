@@ -2,11 +2,10 @@
 using BucklingOfPipes
 using Base.Test
 
-println("Running tests for BucklingOfPipes-j0.3/4-v0.0.1:")
+println("Running tests for ClassicalLaminateTheory-j0.3/4-v0.0.1:")
 
 tests = [
-  "test_clt.jl",
-  "test_basisfunctions.jl"
+  "test_clt.jl"
 ]
 
 println("Running tests:")
