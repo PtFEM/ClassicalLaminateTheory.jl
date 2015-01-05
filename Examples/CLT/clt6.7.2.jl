@@ -2,12 +2,12 @@ using Compat, ClassicalLaminateTheory
 
 forcesAndMoments =
  @compat Dict(
-    :Nx => 300, 
-    :Ny => 100,
-    :Nxy => 200,
-    :Mx => 5, 
-    :My => 3,
-    :Mxy => 1)
+    :Nx => 0, 
+    :Ny => 0,
+    :Nxy => 0,
+    :Mx => 0, 
+    :My => 0,
+    :Mxy => 0)
 
 materialProperties =@compat Dict(
   :E1 => 20.0*10^6, 
@@ -15,18 +15,18 @@ materialProperties =@compat Dict(
   :G12 => 1.0*10^6,
   :ν12 => .34,
   :alpha1 => 0.2e-6,
-  :alpha2 => 20e-6,
-  :beta1 => 0.2e-4,
-  :beta2 => 20e-4)
+  :alpha2 => 0.2e-4,
+  :beta1 => 0.2e-6,
+  :beta2 => 0.2e-4)
 
 laminateProperties =@compat Dict(
   :tk => 0.0075,
-  :nplies => 4,
+  :nplies => 14,
   :repeats => 1,
   :symmetric => true,
-  :orientation => [0, 45, 90, -45],
-  :deltaTemp => -270.0,
-  :deltaMoisture => 101
+  :orientation => [0, 90, 45, 0, -45, 90, 45, 45, 90, -45, 0, 45, 90, 0],
+  :deltaTemp => 0.0,
+  :deltaMoisture => 0
 )
 
 println()

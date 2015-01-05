@@ -2,31 +2,31 @@ using Compat, ClassicalLaminateTheory
 
 forcesAndMoments =
  @compat Dict(
-    :Nx => 300, 
-    :Ny => 100,
-    :Nxy => 200,
-    :Mx => 5, 
-    :My => 3,
-    :Mxy => 1)
+    :Nx => 0, 
+    :Ny => 0,
+    :Nxy => 0,
+    :Mx => 0, 
+    :My => 0,
+    :Mxy => 0)
 
 materialProperties =@compat Dict(
   :E1 => 20.0*10^6, 
-  :E2 => 1.5*10^6,
-  :G12 => 1.0*10^6,
-  :ν12 => .34,
+  :E2 => 1.1*10^6,
+  :G12 => 0.65*10^6,
+  :ν12 => .21,
   :alpha1 => 0.2e-6,
-  :alpha2 => 20e-6,
-  :beta1 => 0.2e-4,
-  :beta2 => 20e-4)
+  :alpha2 => 0.2e-4,
+  :beta1 => 0.2e-6,
+  :beta2 => 0.2e-4)
 
 laminateProperties =@compat Dict(
   :tk => 0.0075,
   :nplies => 4,
-  :repeats => 1,
+  :repeats => 2,
   :symmetric => true,
   :orientation => [0, 45, 90, -45],
-  :deltaTemp => -270.0,
-  :deltaMoisture => 101
+  :deltaTemp => -280.0,
+  :deltaMoisture => 100
 )
 
 println()
