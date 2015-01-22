@@ -3,33 +3,35 @@ import Base: show, showcompact
 # Implementation of Classical Laminate Theory
 
 function qmat(p::Dict)
-  ν21 = p[:ν12]*p[:E2]/p[:E1]
-  [p[:E1]/(1 - p[:ν12]*ν21) p[:ν12]*p[:E2]/(1 - p[:ν12]*ν21) 0;
-  p[:ν12]*p[:E2]/(1 - p[:ν12]*ν21) p[:E2]/(1 - p[:ν12]*ν21) 0;
+  p[:ν21] = p[:ν12]*p[:E2]/p[:E1]
+  [p[:E1]/(1 - p[:ν12]*p[:ν21]) p[:ν12]*p[:E2]/(1 - p[:ν12]*p[:ν21]) 0;
+  p[:ν12]*p[:E2]/(1 - p[:ν12]*p[:ν21]) p[:E2]/(1 - p[:ν12]*p[:ν21]) 0;
   0 0 p[:G12]]
 end
 
 function qbarmat(qmat::Array{Float64, 2}, theta::Float64)
   #theta = 2*theta*pi/360.0
-  ct = cos(theta); st = sin(theta)
-  c = cumprod([ct for i in 1:4], 1)
-  s = cumprod([st for i in 1:4], 1)
+  c1 = cos(theta)
+  s1 = sin(theta)
+  c2 = c1*c1
+  s2 = s1*s1
+  c3 = c1*c2
+  s3 = s1*s2
+  c4 = c2*c2
+  s4 = s2*s2
   qbar = zeros(Float64, 3, 3)
-  qbar[1, 1] = qmat[1, 1]*cos(theta)^4 + 2*(qmat[1, 2] + 2qmat[3, 3])*sin(theta)^2*cos(theta)^2 +
-    qmat[2, 2]*sin(theta)^4
-  qbar[1, 2] = (qmat[1, 1] + qmat[2, 2] - 4qmat[3, 3])*sin(theta)^2*cos(theta)^2 +
-    qmat[1, 2]*(sin(theta)^4 + cos(theta)^4)
+  qbar[1, 1] = qmat[1, 1]*c4 + 2*(qmat[1, 2] + 2qmat[3, 3])*s2*c2 + qmat[2, 2]*s4
+  qbar[1, 2] = (qmat[1, 1] + qmat[2, 2] - 4qmat[3, 3])*s2*c2 + qmat[1, 2]*(s4 + c4)
   qbar[2, 1] = qbar[1, 2]
-  qbar[2, 2] = qmat[1, 1]*sin(theta)^4 + 2*(qmat[1, 2] + 2qmat[3, 3])*sin(theta)^2*cos(theta)^2 +
-    qmat[2, 2]*cos(theta)^4
-  qbar[1, 3] = (qmat[1, 1] - qmat[1, 2] - 2qmat[3, 3])*sin(theta)*cos(theta)^3 +
-    (qmat[1, 2] - qmat[2, 2] + 2qmat[3, 3])*sin(theta)^3*cos(theta)
+  qbar[2, 2] = qmat[1, 1]*s4 + 2*(qmat[1, 2] + 2qmat[3, 3])*s2*c2 + qmat[2, 2]*c4
+  qbar[1, 3] = (qmat[1, 1] - qmat[1, 2] - 2qmat[3, 3])*s1*c3 +
+    (qmat[1, 2] - qmat[2, 2] + 2qmat[3, 3])*s3*c1
   qbar[3, 1] = qbar[1, 3]
-  qbar[2, 3] = (qmat[1, 1] - qmat[1, 2] - 2qmat[3, 3])*sin(theta)^3*cos(theta) +
-    (qmat[1, 2] - qmat[2, 2] + 2qmat[3, 3])*sin(theta)*cos(theta)^3
+  qbar[2, 3] = (qmat[1, 1] - qmat[1, 2] - 2qmat[3, 3])*s3*c1 +
+    (qmat[1, 2] - qmat[2, 2] + 2qmat[3, 3])*s1*c3
   qbar[3, 2] = qbar[2, 3]
-  qbar[3, 3] = (qmat[1, 1] + qmat[2, 2] - 2qmat[1, 2] -2qmat[3, 3])*sin(theta)^2*cos(theta)^2 +
-    qmat[3, 3]*(sin(theta)^4 + cos(theta)^4)
+  qbar[3, 3] = (qmat[1, 1] + qmat[2, 2] - 2qmat[1, 2] - 2qmat[3, 3])*s2*c2 +
+    qmat[3, 3]*(s4 + c4)
   qbar
 end
 
@@ -46,24 +48,6 @@ function createLaminate!(l::Dict, m::Dict, f::Dict)
   end
   computeABD!(l, m)
   l[:fTotal] = [f[:Nx],f[:Ny],f[:Nxy],f[:Mx],f[:My],f[:Mxy]] + l[:fT] + l[:fM]
-  l[:f] = round(l[:ABD]\l[:fTotal], 10)
-  l
-end
-
-function createLaminate!(l::Dict, m::Dict)
-  l[:nLamina] = l[:nplies]*l[:repeats]*(l[:symmetric] ? 2 : 1)
-  l[:laminateThickness] = l[:nLamina] * l[:tk]
-  l[:repeatOrientation] = repeat(l[:orientation], outer=[l[:repeats]])
-  l[:layerOrientation] = l[:symmetric] ? vcat(l[:repeatOrientation], reverse(l[:repeatOrientation])) : l[:orientation]
-  if l[:symmetric]
-    l[:z] = linspace(-l[:laminateThickness]/2, 0, l[:nplies]*l[:repeats]+1)
-    l[:z] = l[:symmetric] ? vcat(l[:z], abs(reverse(l[:z]))[2:end]) : l[:z]
-  else
-    l[:z] = linspace(-l[:laminateThickness]/2, l[:laminateThickness]/2, l[:nLamina]+1)
-  end
-  
-  computeABD!(l, m)
-  l[:fTotal] = l[:fT] + l[:fM]
   l[:f] = round(l[:ABD]\l[:fTotal], 10)
   l
 end
@@ -129,6 +113,7 @@ function model_show(io::IO, m::Dict, compact::Bool)
     println("  Ey  (psi) =       $(m[:Ey])")
     println("  Gxy (psi) =       $(m[:Gxy])")
     println("  νxy (psi) =       $(m[:νxy])")
+    #println("  νyx (psi) =       $(m[:νyx])")
     println()
     println("Strain Curvature (EpsilonKappa):")
     println("  εx   =       $(m[:f][1])")

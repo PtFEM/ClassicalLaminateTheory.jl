@@ -17,7 +17,8 @@ materialProperties = @compat Dict(
   :alpha1 => 0.2e-6,
   :alpha2 => 20e-6,
   :beta1 => 0.2e-4,
-  :beta2 => 20e-4)
+  :beta2 => 20e-4,
+  :thickness => 0.0075)
 
 laminateProperties = @compat Dict(
   :tk => 0.0075,
@@ -30,6 +31,7 @@ laminateProperties = @compat Dict(
 )
 
 qm = qmat(materialProperties)
+materialProperties |> display
 
 println("\nQ:")
 qm |> display

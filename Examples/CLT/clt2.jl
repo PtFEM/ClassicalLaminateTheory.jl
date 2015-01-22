@@ -17,17 +17,37 @@ materialProperties =@compat Dict(
   :alpha1 => 0.2e-6,
   :alpha2 => 20e-6,
   :beta1 => 0.2e-4,
-  :beta2 => 20e-4)
+  :beta2 => 20e-4,
+  :thickness => 0.0075)
 
 laminateProperties =@compat Dict(
   :tk => 0.0075,
-  :nplies => 4,
+  :nplies => 5,
   :repeats => 1,
-  :symmetric => true,
-  :orientation => [0, 45, 90, -45],
+  :symmetric => false,
+  :orientation => [0, 45, 90, 45, -45],
   :deltaTemp => -270.0,
   :deltaMoisture => 101
 )
+
+qm = qmat(materialProperties)
+materialProperties |> display
+
+println("\nQ:")
+qm |> display
+
+qb0 = qbarmat(qm, 0.0)
+qb90 = qbarmat(qm, 90.0)
+qb45 = qbarmat(qm, 45.0)
+qbm45 = qbarmat(qm, -45.0)
+println("\nQbar 0 Degrees:")
+qb0 |> display
+println("\nQbar 90 Degrees:")
+qb90 |> display
+println("\nQbar 45 Degrees:")
+qb45 |> display
+println("\nQbar -45 Degrees:")
+qbm45 |> display
 
 println()
 createLaminate!(laminateProperties, materialProperties, forcesAndMoments)
