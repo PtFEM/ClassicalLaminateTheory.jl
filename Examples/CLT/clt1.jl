@@ -21,7 +21,6 @@ materialProperties = @compat Dict(
   :thickness => 0.0075)
 
 laminateProperties = @compat Dict(
-  :tk => 0.0075,
   :nplies => 4,
   :repeats => 1,
   :symmetric => true,

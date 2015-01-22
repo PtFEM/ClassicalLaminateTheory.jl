@@ -17,10 +17,10 @@ materialProperties =@compat Dict(
   :alpha1 => 0.2e-6,
   :alpha2 => 0.2e-4,
   :beta1 => 0.2e-6,
-  :beta2 => 0.2e-4)
+  :beta2 => 0.2e-4,
+  :thickness => 0.0075)
 
 laminateProperties =@compat Dict(
-  :tk => 0.0075,
   :nplies => 3,
   :repeats => 1,
   :symmetric => true,

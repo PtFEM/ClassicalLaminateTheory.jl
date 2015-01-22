@@ -2,15 +2,29 @@ import Base: show, showcompact
 
 # Implementation of Classical Laminate Theory
 
-function qmat(p::Dict)
-  p[:ν21] = p[:ν12]*p[:E2]/p[:E1]
-  [p[:E1]/(1 - p[:ν12]*p[:ν21]) p[:ν12]*p[:E2]/(1 - p[:ν12]*p[:ν21]) 0;
-  p[:ν12]*p[:E2]/(1 - p[:ν12]*p[:ν21]) p[:E2]/(1 - p[:ν12]*p[:ν21]) 0;
-  0 0 p[:G12]]
+function qmat(m::Dict, ply::Int64=1)
+  res = zeros(3, 3)
+  if typeof(m[:E1]) == Float64
+    @assert ply == 1
+    m[:ν21] = m[:ν12]*m[:E2]/m[:E1]
+    res = [m[:E1]/(1 - m[:ν12]*m[:ν21]) m[:ν12]*m[:E2]/(1 - m[:ν12]*m[:ν21]) 0;
+    m[:ν12]*m[:E2]/(1 - m[:ν12]*m[:ν21]) m[:E2]/(1 - m[:ν12]*m[:ν21]) 0;
+    0 0 m[:G12]]
+  elseif typeof(m[:E1]) == Array{Float64, 1}
+    m[:ν21] = similar(m[:ν12], Float64)
+    for i in 1:length(m[:E1])
+      m[:ν21][i] = m[:ν12][i]*m[:E2][i]/m[:E1][i]
+    end
+    res = 
+      [m[:E1][ply]/(1 - m[:ν12][ply]*m[:ν21][ply]) m[:ν12][ply]*m[:E2][ply]/(1 - m[:ν12][ply]*m[:ν21][ply]) 0;
+      m[:ν12][ply]*m[:E2][ply]/(1 - m[:ν12][ply]*m[:ν21][ply]) m[:E2][ply]/(1 - m[:ν12][ply]*m[:ν21][ply]) 0;
+      0 0 m[:G12][ply]
+    ]
+  end
+  res
 end
 
 function qbarmat(qmat::Array{Float64, 2}, theta::Float64)
-  #theta = 2*theta*pi/360.0
   c1 = cos(theta)
   s1 = sin(theta)
   c2 = c1*c1
@@ -37,14 +51,25 @@ end
 
 function createLaminate!(l::Dict, m::Dict, f::Dict)
   l[:nLamina] = l[:nplies]*l[:repeats]*(l[:symmetric] ? 2 : 1)
-  l[:laminateThickness] = l[:nLamina] * l[:tk]
+  l[:z] = zeros(Float64, l[:nLamina]+1)
+  l[:laminateThickness] = 0.0
+  if typeof(m[:thickness]) == Float64
+    l[:laminateThickness] = l[:nLamina] * m[:thickness]
+    l[:z] = linspace(-l[:laminateThickness]/2, l[:laminateThickness]/2, l[:nLamina]+1)
+  elseif typeof(m[:thickness]) == Array{Float64, 1}
+    @assert l[:nplies] == length(l[:materials])
+    for i in 1:l[:nplies]
+      l[:laminateThickness] += m[:thickness][l[:materials][i]]
+    end
+    l[:z][1] = -l[:laminateThickness]/2.0
+    for i in 1:l[:nplies]
+      l[:z][i+1] = l[:z][i] + m[:thickness][l[:materials][i]]
+    end
+  end
   l[:repeatOrientation] = repeat(l[:orientation], outer=[l[:repeats]])
   l[:layerOrientation] = l[:symmetric] ? vcat(l[:repeatOrientation], reverse(l[:repeatOrientation])) : l[:orientation]
   if l[:symmetric]
-    l[:z] = linspace(-l[:laminateThickness]/2, 0, l[:nplies]*l[:repeats]+1)
     l[:z] = l[:symmetric] ? vcat(l[:z], abs(reverse(l[:z]))[2:end]) : l[:z]
-  else
-    l[:z] = linspace(-l[:laminateThickness]/2, l[:laminateThickness]/2, l[:nLamina]+1)
   end
   computeABD!(l, m)
   l[:fTotal] = [f[:Nx],f[:Ny],f[:Nxy],f[:Mx],f[:My],f[:Mxy]] + l[:fT] + l[:fM]
@@ -104,31 +129,31 @@ function computeABD!(l::Dict, m::Dict)
 end
 
 
-function model_show(io::IO, m::Dict, compact::Bool)
+function model_show(io::IO, l::Dict, compact::Bool)
   if compact
     println(m)
   else
     println("Effective material Properties:")
-    println("  Ex  (psi) =       $(m[:Ex])")
-    println("  Ey  (psi) =       $(m[:Ey])")
-    println("  Gxy (psi) =       $(m[:Gxy])")
-    println("  νxy (psi) =       $(m[:νxy])")
-    #println("  νyx (psi) =       $(m[:νyx])")
+    println("  Ex  (psi) =       $(l[:Ex])")
+    println("  Ey  (psi) =       $(l[:Ey])")
+    println("  Gxy (psi) =       $(l[:Gxy])")
+    println("  νxy (psi) =       $(l[:νxy])")
+    #println("  νyx (psi) =       $(l[:νyx])")
     println()
     println("Strain Curvature (EpsilonKappa):")
-    println("  εx   =       $(m[:f][1])")
-    println("  εy   =       $(m[:f][2])")
-    println("  γxy  =       $(m[:f][3])")
-    println("  κx   =       $(m[:f][4])")
-    println("  κy   =       $(m[:f][5])")
-    println("  κxy  =       $(m[:f][6])")
+    println("  εx   =       $(l[:f][1])")
+    println("  εy   =       $(l[:f][2])")
+    println("  γxy  =       $(l[:f][3])")
+    println("  κx   =       $(l[:f][4])")
+    println("  κy   =       $(l[:f][5])")
+    println("  κxy  =       $(l[:f][6])")
     println()
     println("Effective flexural Properties:")
-    println("  Eᶠx  (psi) =       $(m[:Eᶠx])")
-    println("  Eᶠy  (psi) =       $(m[:Eᶠy])")
-    println("  Gᶠxy (psi) =       $(m[:Gᶠxy])")
-    println("  νᶠxy (psi) =       $(m[:νᶠxy])")
-    println("  νᶠyx (psi) =       $(m[:νᶠyx])")
+    println("  Eᶠx  (psi) =       $(l[:Eᶠx])")
+    println("  Eᶠy  (psi) =       $(l[:Eᶠy])")
+    println("  Gᶠxy (psi) =       $(l[:Gᶠxy])")
+    println("  νᶠxy (psi) =       $(l[:νᶠxy])")
+    println("  νᶠyx (psi) =       $(l[:νᶠyx])")
     println()
   end
 end
