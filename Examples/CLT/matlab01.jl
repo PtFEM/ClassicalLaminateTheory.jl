@@ -22,11 +22,11 @@ materialProperties =@compat Dict(
 
 laminateProperties =@compat Dict(
   :nplies => 4,
+  :orientation => [0, 90, 0, 90],
   :materials => [2, 2, 1, 1],
   :repeats => 2,
   :symmetric => true,
   :symmetricrepeats => 1,
-  :orientation => [0, 90, 0, 90],
   :deltaTemp => -280.0,
   :deltaMoisture => 102
 )
