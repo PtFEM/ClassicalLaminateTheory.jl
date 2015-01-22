@@ -51,6 +51,9 @@ end
 
 function createLaminate!(l::Dict, m::Dict, f::Dict)
   l[:nLamina] = l[:nplies]*l[:repeats]*(l[:symmetric] ? 2 : 1)
+  if l[:symmetricrepeats]
+    l[:nLamina] *= l[:nLamina]
+  end
   l[:z] = zeros(Float64, l[:nLamina]+1)
   l[:laminateThickness] = 0.0
   if typeof(m[:thickness]) == Float64
