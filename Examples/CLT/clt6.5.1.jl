@@ -26,7 +26,7 @@ laminateProperties =@compat Dict(
   :symmetric => true,
   :orientation => [0, 45, 90, -45],
   :deltaTemp => -280.0,
-  :deltaMoisture => 100
+  :deltaMoisture => 0
 )
 
 println()

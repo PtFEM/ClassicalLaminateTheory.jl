@@ -85,7 +85,7 @@ function createLaminate!(l::Dict, m::Dict, f::Dict)
   end
   computeABD!(l, m)
   l[:fTotal] = [f[:Nx],f[:Ny],f[:Nxy],f[:Mx],f[:My],f[:Mxy]] + l[:fT] + l[:fM]
-  l[:f] = round(l[:ABD]\l[:fTotal], 10)
+  l[:f] = round(l[:ABD]\l[:fTotal], 15)
 end
 
 function computeABD!(l::Dict, m::Dict)
@@ -119,13 +119,13 @@ function computeABD!(l::Dict, m::Dict)
     ]
     
     ntemp += qbarmat(qmat(m, l[:materials][i]), theta)*alpha*l[:deltaTemp]*tk
-    mtemp += (1/2)*qbarmat(qmat(m, l[:materials][i]), theta)*beta/100.0*l[:deltaTemp]*tk2
+    mtemp += (1/2)*qbarmat(qmat(m, l[:materials][i]), theta)*beta*l[:deltaTemp]*tk2
     nmoist += qbarmat(qmat(m, l[:materials][i]), theta)*alpha*l[:deltaMoisture]*tk
-    mmoist += (1/2)*qbarmat(qmat(m, l[:materials][i]), theta)*beta/100.0*l[:deltaMoisture]*tk2
+    mmoist += (1/2)*qbarmat(qmat(m, l[:materials][i]), theta)*beta*l[:deltaMoisture]*tk2
   end
   
-  l[:fT] = vcat(ntemp, mtemp)
-  l[:fM] = vcat(nmoist, mmoist)
+  l[:fT] = vcat(ntemp, mtemp/100.0)
+  l[:fM] = vcat(nmoist*100.0, mmoist)
   l[:ABD] = [ A B; B D]
   l[:abd] = inv(l[:ABD])
   l[:Ex] = 1/(l[:thickness]*l[:abd][1, 1])
@@ -148,8 +148,8 @@ function model_show(io::IO, l::Dict, compact::Bool)
     println("  Ex  (psi) =       $(l[:Ex])")
     println("  Ey  (psi) =       $(l[:Ey])")
     println("  Gxy (psi) =       $(l[:Gxy])")
-    println("  νxy (psi) =       $(l[:νxy])")
-    #println("  νyx (psi) =       $(l[:νyx])")
+    println("  νxy       =       $(l[:νxy])")
+    #println("  νyx       =       $(l[:νyx])")
     println()
     println("Strain Curvature (EpsilonKappa):")
     println("  εx   =       $(l[:f][1])")
@@ -163,8 +163,8 @@ function model_show(io::IO, l::Dict, compact::Bool)
     println("  Eᶠx  (psi) =       $(l[:Eᶠx])")
     println("  Eᶠy  (psi) =       $(l[:Eᶠy])")
     println("  Gᶠxy (psi) =       $(l[:Gᶠxy])")
-    println("  νᶠxy (psi) =       $(l[:νᶠxy])")
-    println("  νᶠyx (psi) =       $(l[:νᶠyx])")
+    println("  νᶠxy       =       $(l[:νᶠxy])")
+    println("  νᶠyx       =       $(l[:νᶠyx])")
     println()
   end
 end

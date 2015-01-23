@@ -26,7 +26,7 @@ laminateProperties = @compat Dict(
   :symmetric => true,
   :orientation => [0, 45, 90, -45],
   :deltaTemp => 0.0,
-  :deltaMoisture => 0.00
+  :deltaMoisture => 0
 )
 
 createLaminate!(laminateProperties, materialProperties, forcesAndMoments)

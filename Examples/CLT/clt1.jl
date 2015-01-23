@@ -24,9 +24,10 @@ laminateProperties = @compat Dict(
   :nplies => 4,
   :repeats => 1,
   :symmetric => true,
+  :symmetricrepeats => 1,
   :orientation => [0, 45, 90, -45],
   :deltaTemp => 0.0,
-  :deltaMoisture => 0.00
+  :deltaMoisture => 0
 )
 
 qm = qmat(materialProperties)

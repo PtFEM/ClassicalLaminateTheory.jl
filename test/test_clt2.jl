@@ -26,12 +26,19 @@ laminateProperties =@compat Dict(
   :symmetric => false,
   :orientation => [0, 45, 90, 45, -45],
   :deltaTemp => -270.0,
-  :deltaMoisture => 101
+  :deltaMoisture => 1
 )
 
 createLaminate!(laminateProperties, materialProperties, forcesAndMoments)
 
-fm = [158.39, -41.6097, 210.166, 4.84751, 3.15249, 0.84751]
+fm = [
+157.552,
+-42.4476,
+210.226,
+4.84661,
+3.15339,
+0.846607
+]
 
 @assert(round(laminateProperties[:fTotal], 3) == round(fm, 3))
 println("Tests for CLT2 passed!")

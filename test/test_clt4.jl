@@ -26,20 +26,21 @@ laminateProperties =@compat Dict(
   :materials => [2, 2, 1, 1],
   :repeats => 2,
   :symmetric => true,
-  :symmetricrepeats => 1,
+  :symmetricrepeats => 2,
   :deltaTemp => -280.0,
   :deltaMoisture => 2
 )
 
-materialProperties |> display
-println()
 createLaminate!(laminateProperties, materialProperties, forcesAndMoments)
-show(laminateProperties)
 
-println("ABD matrix:")
-round(laminateProperties[:ABD], 3) |> display
+fm = [
+-261.09,
+-961.09,
+150.0,
+2.5,
+5.0,
+10.0
+]
 
-println()
-println("Total forces and moments:")
-round(laminateProperties[:fTotal], 7) |> display
-
+@assert round(laminateProperties[:fTotal], 1) == round(fm, 1)
+println("Tests for CLT4 passed!")

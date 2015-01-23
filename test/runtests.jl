@@ -8,6 +8,7 @@ tests = [
   "test_clt1.jl",
   "test_clt2.jl",
   "test_clt3.jl",
+  "test_clt4.jl"
 ]
 
 println("Running tests:")
