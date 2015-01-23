@@ -31,27 +31,9 @@ laminateProperties =@compat Dict(
   :deltaMoisture => 102
 )
 
-qm = qmat(materialProperties)
-materialProperties |> display
-
-println("\nQ:")
-qm |> display
-
-qb0 = qbarmat(qm, 0.0)
-qb90 = qbarmat(qm, 90.0)
-println("\nQbar 0 Degrees:")
-qb0 |> display
-println("\nQbar 90 Degrees:")
-qb90 |> display
-
-println()
 createLaminate!(laminateProperties, materialProperties, forcesAndMoments)
-laminateProperties |> display
 
-println("ABD matrix:")
-round(laminateProperties[:ABD], 3) |> display
+fm = [-402.962, -1102.96, 150.0, 2.5, 5.0, 10.0]
 
-println()
-println("Total forces and moments:")
-round(laminateProperties[:fTotal], 7) |> display
-
+@assert(round(laminateProperties[:fTotal], 2) == round(fm, 2))
+println("Tests for CLT3 passed!")

@@ -30,6 +30,8 @@ laminateProperties =@compat Dict(
 )
 
 createLaminate!(laminateProperties, materialProperties, forcesAndMoments)
+
 fm = [158.39, -41.6097, 210.166, 4.84751, 3.15249, 0.84751]
+
 @assert(round(laminateProperties[:fTotal], 3) == round(fm, 3))
-println("Tests for CLT passed!")
+println("Tests for CLT2 passed!")

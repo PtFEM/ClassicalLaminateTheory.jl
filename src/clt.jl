@@ -2,10 +2,10 @@ import Base: show, showcompact
 
 # Implementation of Classical Laminate Theory
 
-function qmat(m::Dict, ply::Int64=1)
+function qmat(m::Dict, mat::Int64=1)
   res = zeros(3, 3)
   if typeof(m[:E1]) == Float64
-    @assert ply == 1
+    @assert mat == 1
     m[:ν21] = m[:ν12]*m[:E2]/m[:E1]
     res = [m[:E1]/(1 - m[:ν12]*m[:ν21]) m[:ν12]*m[:E2]/(1 - m[:ν12]*m[:ν21]) 0;
     m[:ν12]*m[:E2]/(1 - m[:ν12]*m[:ν21]) m[:E2]/(1 - m[:ν12]*m[:ν21]) 0;
@@ -16,9 +16,9 @@ function qmat(m::Dict, ply::Int64=1)
       m[:ν21][i] = m[:ν12][i]*m[:E2][i]/m[:E1][i]
     end
     res = 
-      [m[:E1][ply]/(1 - m[:ν12][ply]*m[:ν21][ply]) m[:ν12][ply]*m[:E2][ply]/(1 - m[:ν12][ply]*m[:ν21][ply]) 0;
-      m[:ν12][ply]*m[:E2][ply]/(1 - m[:ν12][ply]*m[:ν21][ply]) m[:E2][ply]/(1 - m[:ν12][ply]*m[:ν21][ply]) 0;
-      0 0 m[:G12][ply]
+      [m[:E1][mat]/(1 - m[:ν12][mat]*m[:ν21][mat]) m[:ν12][mat]*m[:E2][mat]/(1 - m[:ν12][mat]*m[:ν21][mat]) 0;
+      m[:ν12][mat]*m[:E2][mat]/(1 - m[:ν12][mat]*m[:ν21][mat]) m[:E2][mat]/(1 - m[:ν12][mat]*m[:ν21][mat]) 0;
+      0 0 m[:G12][mat]
     ]
   end
   res
@@ -50,34 +50,42 @@ function qbarmat(qmat::Array{Float64, 2}, theta::Float64)
 end
 
 function createLaminate!(l::Dict, m::Dict, f::Dict)
-  l[:nLamina] = l[:nplies]*l[:repeats]*(l[:symmetric] ? 2 : 1)
-  if l[:symmetricrepeats]
-    l[:nLamina] *= l[:nLamina]
+  l[:thickness] = 0.0
+  if !(:materials in keys(l)) || (:materials in keys(l) && typeof(l[:materials]) == Int64)
+    l[:materials] = ones(Int64, l[:nplies])
   end
-  l[:z] = zeros(Float64, l[:nLamina]+1)
-  l[:laminateThickness] = 0.0
+  if :repeats in keys(l) && l[:repeats] > 1
+    l[:nplies] *= l[:repeats]
+    l[:orientation] = repeat(l[:orientation], outer=[l[:repeats]])
+    l[:materials] = repeat(l[:materials], outer=[l[:repeats]])
+  end
+  if :symmetric in keys(l) && l[:symmetric] == true
+    l[:nplies] *= 2
+    l[:orientation] = vcat(l[:orientation], reverse(l[:orientation]))
+    l[:materials] = vcat(l[:materials], reverse(l[:materials]))
+  end
+  if :symmetricrepeats in keys(l) && l[:symmetricrepeats] > 1
+    l[:nplies] *= l[:symmetricrepeats]
+    l[:orientation] = repeat(l[:orientation], outer=[l[:symmetricrepeats]])
+    l[:materials] = repeat(l[:materials], outer=[l[:symmetricrepeats]])
+  end
+  l[:z] = zeros(Float64, l[:nplies]+1)
   if typeof(m[:thickness]) == Float64
-    l[:laminateThickness] = l[:nLamina] * m[:thickness]
-    l[:z] = linspace(-l[:laminateThickness]/2, l[:laminateThickness]/2, l[:nLamina]+1)
+    l[:thickness] = l[:nplies] * m[:thickness]
+    l[:z] = linspace(-l[:thickness]/2, l[:thickness]/2, l[:nplies]+1)
   elseif typeof(m[:thickness]) == Array{Float64, 1}
     @assert l[:nplies] == length(l[:materials])
     for i in 1:l[:nplies]
-      l[:laminateThickness] += m[:thickness][l[:materials][i]]
+      l[:thickness] += m[:thickness][l[:materials][i]]
     end
-    l[:z][1] = -l[:laminateThickness]/2.0
+    l[:z][1] = -l[:thickness]/2.0
     for i in 1:l[:nplies]
       l[:z][i+1] = l[:z][i] + m[:thickness][l[:materials][i]]
     end
   end
-  l[:repeatOrientation] = repeat(l[:orientation], outer=[l[:repeats]])
-  l[:layerOrientation] = l[:symmetric] ? vcat(l[:repeatOrientation], reverse(l[:repeatOrientation])) : l[:orientation]
-  if l[:symmetric]
-    l[:z] = l[:symmetric] ? vcat(l[:z], abs(reverse(l[:z]))[2:end]) : l[:z]
-  end
   computeABD!(l, m)
   l[:fTotal] = [f[:Nx],f[:Ny],f[:Nxy],f[:Mx],f[:My],f[:Mxy]] + l[:fT] + l[:fM]
   l[:f] = round(l[:ABD]\l[:fTotal], 10)
-  l
 end
 
 function computeABD!(l::Dict, m::Dict)
@@ -88,45 +96,45 @@ function computeABD!(l::Dict, m::Dict)
   mtemp = zeros(Float64, 3)
   nmoist = zeros(Float64, 3)
   mmoist = zeros(Float64, 3)
-  for i in 1:l[:nLamina]
+  for i in 1:l[:nplies]
     tk = l[:z][i+1]-l[:z][i]
     tk2 = l[:z][i+1]^2-l[:z][i]^2
     tk3 = l[:z][i+1]^3-l[:z][i]^3
     
-    theta = float(l[:layerOrientation][i])*(2*pi/360.0)
-    A += qbarmat(qmat(m), theta)*tk
-    B += (1/2) * qbarmat(qmat(m), theta)*tk2
-    D += (1/3) * qbarmat(qmat(m), theta)*tk3
+    theta = float(l[:orientation][i])*(pi/180.0)
+    A += qbarmat(qmat(m, l[:materials][i]), theta)*tk
+    B += (1/2) * qbarmat(qmat(m, l[:materials][i]), theta)*tk2
+    D += (1/3) * qbarmat(qmat(m, l[:materials][i]), theta)*tk3
     
     alpha = [
-      m[:alpha1]*cos(theta)^2 + m[:alpha2]*sin(theta)^2,
-      m[:alpha1]*sin(theta)^2 + m[:alpha2]*cos(theta)^2,
-      2*cos(theta)*sin(theta)*(m[:alpha1]-m[:alpha2])
+      m[:alpha1][l[:materials][i]]*cos(theta)^2 + m[:alpha2][l[:materials][i]]*sin(theta)^2,
+      m[:alpha1][l[:materials][i]]*sin(theta)^2 + m[:alpha2][l[:materials][i]]*cos(theta)^2,
+      2*cos(theta)*sin(theta)*(m[:alpha1][l[:materials][i]]-m[:alpha2][l[:materials][i]])
     ]
     
     beta = [
-      m[:beta1]*cos(theta)^2 + m[:beta2]*sin(theta)^2,
-      m[:beta1]*sin(theta)^2 + m[:beta2]*cos(theta)^2,
-      2*cos(theta)*sin(theta)*(m[:beta1]-m[:beta2])
+      m[:beta1][l[:materials][i]]*cos(theta)^2 + m[:beta2][l[:materials][i]]*sin(theta)^2,
+      m[:beta1][l[:materials][i]]*sin(theta)^2 + m[:beta2][l[:materials][i]]*cos(theta)^2,
+      2*cos(theta)*sin(theta)*(m[:beta1][l[:materials][i]]-m[:beta2][l[:materials][i]])
     ]
     
-    ntemp += qbarmat(qmat(m), theta)*alpha*l[:deltaTemp]*tk
-    mtemp += (1/2)*qbarmat(qmat(m), theta)*beta/100.0*l[:deltaTemp]*tk2
-    nmoist += qbarmat(qmat(m), theta)*alpha*l[:deltaMoisture]*tk
-    mmoist += (1/2)*qbarmat(qmat(m), theta)*beta/100.0*l[:deltaMoisture]*tk2
+    ntemp += qbarmat(qmat(m, l[:materials][i]), theta)*alpha*l[:deltaTemp]*tk
+    mtemp += (1/2)*qbarmat(qmat(m, l[:materials][i]), theta)*beta/100.0*l[:deltaTemp]*tk2
+    nmoist += qbarmat(qmat(m, l[:materials][i]), theta)*alpha*l[:deltaMoisture]*tk
+    mmoist += (1/2)*qbarmat(qmat(m, l[:materials][i]), theta)*beta/100.0*l[:deltaMoisture]*tk2
   end
   
   l[:fT] = vcat(ntemp, mtemp)
   l[:fM] = vcat(nmoist, mmoist)
   l[:ABD] = [ A B; B D]
   l[:abd] = inv(l[:ABD])
-  l[:Ex] = 1/(l[:laminateThickness]*l[:abd][1, 1])
-  l[:Ey] = 1/(l[:laminateThickness]*l[:abd][2, 2])
-  l[:Gxy] = 1/(l[:laminateThickness]*l[:abd][3, 3])
+  l[:Ex] = 1/(l[:thickness]*l[:abd][1, 1])
+  l[:Ey] = 1/(l[:thickness]*l[:abd][2, 2])
+  l[:Gxy] = 1/(l[:thickness]*l[:abd][3, 3])
   l[:νxy] = -l[:abd][2, 1] / l[:abd][1, 1]
-  l[:Eᶠx] = 12/(l[:laminateThickness]^3*l[:abd][4, 4])
-  l[:Eᶠy] = 12/(l[:laminateThickness]^3*l[:abd][5, 5])
-  l[:Gᶠxy] = 12/(l[:laminateThickness]^3*l[:abd][6, 6])
+  l[:Eᶠx] = 12/(l[:thickness]^3*l[:abd][4, 4])
+  l[:Eᶠy] = 12/(l[:thickness]^3*l[:abd][5, 5])
+  l[:Gᶠxy] = 12/(l[:thickness]^3*l[:abd][6, 6])
   l[:νᶠxy] = -l[:abd][5, 4] / l[:abd][4, 4]
   l[:νᶠyx] = -l[:abd][5, 4] / l[:abd][5, 5]
 end
