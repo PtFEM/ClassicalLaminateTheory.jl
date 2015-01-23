@@ -119,13 +119,13 @@ function computeABD!(l::Dict, m::Dict)
     ]
     
     ntemp += qbarmat(qmat(m, l[:materials][i]), theta)*alpha*l[:deltaTemp]*tk
-    mtemp += (1/2)*qbarmat(qmat(m, l[:materials][i]), theta)*beta*l[:deltaTemp]*tk2
-    nmoist += qbarmat(qmat(m, l[:materials][i]), theta)*alpha*l[:deltaMoisture]*tk
+    mtemp += (1/2)*qbarmat(qmat(m, l[:materials][i]), theta)*alpha*l[:deltaTemp]*tk2
+    nmoist += qbarmat(qmat(m, l[:materials][i]), theta)*beta*l[:deltaMoisture]*tk
     mmoist += (1/2)*qbarmat(qmat(m, l[:materials][i]), theta)*beta*l[:deltaMoisture]*tk2
   end
   
-  l[:fT] = vcat(ntemp, mtemp/100.0)
-  l[:fM] = vcat(nmoist*100.0, mmoist)
+  l[:fT] = vcat(ntemp, mtemp)
+  l[:fM] = vcat(nmoist, mmoist)
   l[:ABD] = [ A B; B D]
   l[:abd] = inv(l[:ABD])
   l[:Ex] = 1/(l[:thickness]*l[:abd][1, 1])
