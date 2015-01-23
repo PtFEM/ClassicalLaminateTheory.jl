@@ -34,8 +34,8 @@ laminateProperties =@compat Dict(
 createLaminate!(laminateProperties, materialProperties, forcesAndMoments)
 
 fm = [
-369.455,
--330.545,
+-1191.14,
+-1891.14,
 150.0,
 2.5,
 5.0,
